@@ -20,6 +20,10 @@ export default function AttemptPage() {
 
   const attemptIdNumber = Number(attemptId);
 
+  // ========================================
+  // ATTEMPT
+  // ========================================
+
   const {
     data: attempt,
     isLoading: isAttemptLoading,
@@ -27,6 +31,10 @@ export default function AttemptPage() {
   } = useAttempt(attemptIdNumber);
 
   const examId = attempt?.exam;
+
+  // ========================================
+  // QUESTIONS
+  // ========================================
 
   const {
     data: questions,
@@ -38,9 +46,14 @@ export default function AttemptPage() {
   // ZUSTAND
   // ========================================
 
-  const currentQuestionIndex =
+  const currentPage =
     useAttemptStore(
-      (state) => state.currentQuestionIndex
+      (state) => state.currentPage
+    );
+
+  const questionsPerPage =
+    useAttemptStore(
+      (state) => state.questionsPerPage
     );
 
   const answers =
@@ -53,19 +66,14 @@ export default function AttemptPage() {
       (state) => state.setAnswer
     );
 
-  const setCurrentQuestionIndex =
+  const nextPage =
     useAttemptStore(
-      (state) => state.setCurrentQuestionIndex
+      (state) => state.nextPage
     );
 
-  const nextQuestion =
+  const previousPage =
     useAttemptStore(
-      (state) => state.nextQuestion
-    );
-
-  const previousQuestion =
-    useAttemptStore(
-      (state) => state.previousQuestion
+      (state) => state.previousPage
     );
 
   // ========================================
@@ -93,7 +101,7 @@ export default function AttemptPage() {
   }
 
   // ========================================
-  // ATTEMPT TIDAK DITEMUKAN
+  // ATTEMPT NOT FOUND
   // ========================================
 
   if (!attempt) {
@@ -129,10 +137,13 @@ export default function AttemptPage() {
   }
 
   // ========================================
-  // QUESTIONS KOSONG
+  // QUESTIONS EMPTY
   // ========================================
 
-  if (!questions || questions.length === 0) {
+  if (
+    !questions ||
+    questions.length === 0
+  ) {
     return (
       <Typography>
         Belum ada soal.
@@ -141,19 +152,31 @@ export default function AttemptPage() {
   }
 
   // ========================================
-  // CURRENT QUESTION
+  // PAGINATION CALCULATION
   // ========================================
 
-  const currentQuestion =
-    questions[currentQuestionIndex];
+  const totalQuestions =
+    questions.length;
 
-  if (!currentQuestion) {
-    return (
-      <Typography color="error">
-        Soal tidak ditemukan.
-      </Typography>
+  const totalPages =
+    Math.ceil(
+      totalQuestions /
+        questionsPerPage
     );
-  }
+
+  const startIndex =
+    currentPage *
+    questionsPerPage;
+
+  const endIndex =
+    startIndex +
+    questionsPerPage;
+
+  const currentQuestions =
+    questions.slice(
+      startIndex,
+      endIndex
+    );
 
   // ========================================
   // RENDER
@@ -175,79 +198,90 @@ export default function AttemptPage() {
         color="text.secondary"
         sx={{ mt: 1 }}
       >
-        Soal {currentQuestionIndex + 1} dari{' '}
-        {questions.length}
+        Halaman {currentPage + 1} dari{' '}
+        {totalPages}
       </Typography>
 
       {/* ================================== */}
-      {/* QUESTION CARD */}
+      {/* QUESTIONS */}
       {/* ================================== */}
 
-      <Box
-        sx={{
-          mt: 3,
-          p: 3,
-          border: '1px solid',
-          borderColor: 'divider',
-          borderRadius: 2,
-        }}
-      >
+      <Box sx={{ mt: 3 }}>
 
-        {/* QUESTION */}
-        <Typography
-          variant="h6"
-          sx={{ mb: 3 }}
-        >
-          {currentQuestion.order}.{' '}
-          {currentQuestion.question_text}
-        </Typography>
+        {currentQuestions.map(
+          (question) => (
+            <Box
+              key={question.id}
+              sx={{
+                mb: 3,
+                p: 3,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 2,
+              }}
+            >
 
-        {/* ================================== */}
-        {/* ANSWERS */}
-        {/* ================================== */}
+              {/* QUESTION */}
 
-        <RadioGroup
-          value={
-            answers[currentQuestion.id] ?? ''
-          }
-          onChange={(event) => {
-            const optionId = Number(
-              event.target.value
-            );
+              <Typography
+                variant="h6"
+                sx={{ mb: 3 }}
+              >
+                {question.order}.{' '}
+                {question.question_text}
+              </Typography>
 
-            setAnswer(
-              currentQuestion.id,
-              optionId
-            );
-          }}
-        >
-          {currentQuestion.options.map(
-            (option) => (
-              <FormControlLabel
-                key={option.id}
-                value={option.id}
-                control={<Radio />}
-                label={
-                  `${option.order}. ${option.option_text}`
+              {/* ANSWERS */}
+
+              <RadioGroup
+                value={
+                  answers[question.id] ??
+                  ''
                 }
-                sx={{
-                  mb: 1,
+                onChange={(event) => {
+                  const optionId =
+                    Number(
+                      event.target.value
+                    );
+
+                  setAnswer(
+                    question.id,
+                    optionId
+                  );
                 }}
-              />
-            )
-          )}
-        </RadioGroup>
+              >
+                {question.options.map(
+                  (option) => (
+                    <FormControlLabel
+                      key={option.id}
+                      value={option.id}
+                      control={<Radio />}
+                      label={
+                        `${option.order}. ${option.option_text}`
+                      }
+                      sx={{
+                        mb: 1,
+                      }}
+                    />
+                  )
+                )}
+              </RadioGroup>
+
+            </Box>
+          )
+        )}
 
       </Box>
 
       {/* ================================== */}
-      {/* PREVIOUS / NEXT */}
+      {/* PAGINATION BUTTON */}
       {/* ================================== */}
 
       <Box
         sx={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent:
+            'space-between',
           mt: 3,
         }}
       >
@@ -255,10 +289,10 @@ export default function AttemptPage() {
         <Button
           variant="outlined"
           disabled={
-            currentQuestionIndex === 0
+            currentPage === 0
           }
           onClick={() =>
-            previousQuestion()
+            previousPage()
           }
         >
           Sebelumnya
@@ -267,11 +301,11 @@ export default function AttemptPage() {
         <Button
           variant="contained"
           disabled={
-            currentQuestionIndex ===
-            questions.length - 1
+            currentPage ===
+            totalPages - 1
           }
           onClick={() =>
-            nextQuestion(questions.length)
+            nextPage(totalQuestions)
           }
         >
           Berikutnya
@@ -280,63 +314,26 @@ export default function AttemptPage() {
       </Box>
 
       {/* ================================== */}
-      {/* QUESTION NAVIGATION */}
+      {/* PAGE INFORMATION */}
       {/* ================================== */}
 
-      <Box sx={{ mt: 4 }}>
-
+      <Box
+        sx={{
+          mt: 3,
+          textAlign: 'center',
+        }}
+      >
         <Typography
-          variant="subtitle1"
-          sx={{
-            fontWeight: 600,
-            mb: 2,
-          }}
+          variant="body2"
+          color="text.secondary"
         >
-          Nomor Soal
+          Soal {startIndex + 1} -{' '}
+          {Math.min(
+            endIndex,
+            totalQuestions
+          )}{' '}
+          dari {totalQuestions}
         </Typography>
-
-        <Box
-          sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1,
-          }}
-        >
-          {questions.map(
-            (question, index) => {
-
-              const isCurrent =
-                index ===
-                currentQuestionIndex;
-
-              // const isAnswered = answers[question.id] !== undefined;
-
-              return (
-                <Button
-                  key={question.id}
-                  variant={
-                    isCurrent
-                      ? 'contained'
-                      : 'outlined'
-                  }
-                  onClick={() =>
-                    setCurrentQuestionIndex(
-                      index
-                    )
-                  }
-                  sx={{
-                    minWidth: 44,
-                    height: 44,
-                    fontWeight: 600,
-                  }}
-                >
-                  {index + 1}
-                </Button>
-              );
-            }
-          )}
-        </Box>
-
       </Box>
 
     </Box>
