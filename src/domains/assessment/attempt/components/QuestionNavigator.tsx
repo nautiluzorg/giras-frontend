@@ -58,7 +58,7 @@ export default function QuestionNavigator({
         sx={{
           display: 'grid',
           gridTemplateColumns:
-            'repeat(5, 1fr)',
+            'repeat(5, minmax(0, 1fr))',
           gap: 1,
         }}
       >
@@ -91,6 +91,9 @@ export default function QuestionNavigator({
                     ? 'contained'
                     : 'outlined'
                 }
+                sx={{
+                  minWidth: 0,
+                }}
                 onClick={() =>
                   handleQuestionClick(
                     questionNumber

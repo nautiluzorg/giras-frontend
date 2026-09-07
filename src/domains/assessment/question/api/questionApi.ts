@@ -1,4 +1,4 @@
-import axiosInstance from '../../../services/api/axios';
+import axiosInstance from '@/core/api/axios';
 import type { Question } from '../types/question.types';
 
 export async function getQuestions(

@@ -1,4 +1,4 @@
-import api from '../../../services/api/axios';
+import api from '@/core/api/axios';
 import type { Exam } from '../types/exam.types';
 
 

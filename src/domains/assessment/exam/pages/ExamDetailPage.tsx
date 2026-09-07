@@ -13,11 +13,11 @@ import {
   useParams,
 } from 'react-router-dom';
 
-import PageHeader from '../../../components/ui/PageHeader';
-import LoadingState from '../../../components/ui/LoadingState';
-import ErrorState from '../../../components/ui/ErrorState';
-import GirasButton from '../../../components/ui/GirasButton';
-import GirasCard from '../../../components/ui/GirasCard';
+import PageHeader from '@/components/ui/PageHeader';
+import LoadingState from '@/components/ui/LoadingState';
+import ErrorState from '@/components/ui/ErrorState';
+import GirasButton from '@/components/ui/GirasButton';
+import GirasCard from '@/components/ui/GirasCard';
 
 import { useExam } from '../hooks/useExam';
 import { useStartAttempt } from '../../attempt/hooks/useStartAttempts';

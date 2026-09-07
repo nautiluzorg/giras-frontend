@@ -186,8 +186,16 @@ export default function AttemptPage() {
   // ========================================
 
   return (
-    <Box>
+    <Box
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
 
+    >
       {/* ================================== */}
       {/* HEADER */}
       {/* ================================== */}
@@ -205,11 +213,41 @@ export default function AttemptPage() {
         {totalPages}
       </Typography>
 
+      <Box
+        sx={{
+          display: 'grid',
+          flex: 1,
+          minHeight: 0,
+          overflow: 'hidden',
+          gridTemplateColumns: {
+            xs: '1fr',
+            md: 'minmax(0, 1fr) 280px',
+          },
+          gridTemplateRows: {
+            xs: 'minmax(0, 1fr) auto',
+            md: 'minmax(0, 1fr)',
+          },
+          gap: {
+            xs: 3,
+            md: 4,
+          },
+          alignItems: 'stretch',
+          mt: 3,
+        }}
+      >
+        <Box
+          sx={{
+            minWidth: 0,
+            minHeight: 0,
+            overflowY: 'auto',
+          }}
+        >
+
       {/* ================================== */}
       {/* QUESTIONS */}
       {/* ================================== */}
 
-      <Box sx={{ mt: 3 }}>
+      <Box>
 
         {currentQuestions.map(
           (question) => (
@@ -341,18 +379,27 @@ export default function AttemptPage() {
         </Typography>
       </Box>
 
+      </Box>
       {/* ================================== */}
       {/* QUESTION NAVIGATOR */}
       {/* ================================== */}
 
       <Box
+        component="aside"
         sx={{
-          mt: 4,
+          position: {
+            md: 'sticky',
+          },
+          top: {
+            md: 24,
+          },
+          alignSelf: 'start',
         }}
       >
         <QuestionNavigator
           totalQuestions={totalQuestions}
         />
+      </Box>
       </Box>
     </Box>
   );

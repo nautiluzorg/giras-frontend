@@ -1,75 +1,57 @@
-# React + TypeScript + Vite
+# GIRAS Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+GIRAS is a React frontend for the current individual tryout experience. Its architecture keeps the assessment engine shared so future school, tutoring, and enterprise products can consume the same capabilities without duplicating them.
 
-Currently, two official plugins are available:
+## Tech stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19, TypeScript, and Vite
+- Material UI
+- React Router
+- TanStack React Query
+- Zustand
+- Axios
 
-## React Compiler
+## Architecture
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/app`: application composition, configuration, and router
+- `src/core`: cross-cutting infrastructure only
+- `src/components/ui`: reusable presentation components
+- `src/domains/assessment`: shared assessment business domain
+- `src/layouts`: current application shell
+- `src/theme`: Material UI theme
 
-## Expanding the ESLint configuration
+Assessment owns its API endpoints, query hooks, types, feature UI, and local attempt state. Core never imports from a domain. Layouts and routes may import domains; shared UI remains domain-agnostic.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## State management
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- TanStack React Query owns server data, caching, and mutations.
+- Zustand is limited to local interactive state; attempt pagination and selected answers remain in the attempt domain.
+- Authentication is not yet implemented in this codebase, so no AuthProvider, role, permission, or organization API abstraction has been introduced.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Environment
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Set this local environment variable when an API base URL is required:
 
-```
+`VITE_API_BASE_URL=http://localhost:8000`
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Environment access is centralized in `src/app/config/env.ts`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Commands
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `npm run dev`
+- `npm run lint`
+- `npx tsc -b --pretty false`
+- `npm run build`
+- `npm run preview`
 
-```
+There is currently no test script.
+
+## Architectural rules
+
+- Keep API transport in `core/api`; keep endpoints and request/response types in their owning domain.
+- Preserve current API paths, payloads, React Query keys, routes, and behavior during structural changes.
+- Prefer explicit imports and `@/` aliases over barrel exports that can introduce cycles.
+- Put only truly generic UI in `components/ui` or `components/common`.
+- Add organization membership, roles, permissions, and segment workspaces only alongside verified backend contracts and product requirements.
+
+See [the architecture guide](docs/architecture/README.md) for boundaries and migration guidance.

@@ -5,8 +5,8 @@ import {
 
 import { Link } from 'react-router-dom';
 
-import GirasButton from '../../../components/ui/GirasButton';
-import GirasCard from '../../../components/ui/GirasCard';
+import GirasButton from '@/components/ui/GirasButton';
+import GirasCard from '@/components/ui/GirasCard';
 
 import type { Exam } from '../types/exam.types';
 

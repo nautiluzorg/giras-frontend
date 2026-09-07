@@ -1,9 +1,9 @@
 import { Box } from '@mui/material';
 
-import PageHeader from '../../../components/ui/PageHeader';
-import LoadingState from '../../../components/ui/LoadingState';
-import ErrorState from '../../../components/ui/ErrorState';
-import EmptyState from '../../../components/ui/EmptyState';
+import PageHeader from '@/components/ui/PageHeader';
+import LoadingState from '@/components/ui/LoadingState';
+import ErrorState from '@/components/ui/ErrorState';
+import EmptyState from '@/components/ui/EmptyState';
 
 import ExamCard from '../components/ExamCard';
 import { useExams } from '../hooks/useExams';

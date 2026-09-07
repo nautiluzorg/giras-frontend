@@ -11,7 +11,7 @@ import {
 
 import MenuIcon from '@mui/icons-material/Menu';
 
-import Sidebar from './Sidebar';
+import AppSidebar from './AppSidebar';
 
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -28,11 +28,13 @@ export default function AppLayout() {
     <Box
       sx={{
         display: 'flex',
-        minHeight: '100vh',
+        height: '100dvh',
+        minHeight: 0,
+        overflow: 'hidden',
         backgroundColor: 'background.default',
       }}
     >
-      <Sidebar
+      <AppSidebar
         mobileOpen={mobileOpen}
         onMobileClose={handleMobileClose}
       />
@@ -43,12 +45,14 @@ export default function AppLayout() {
           display: 'flex',
           flexDirection: 'column',
           minWidth: 0,
+          minHeight: 0,
         }}
       >
         <AppBar
-          position="static"
+          position="sticky"
           color="inherit"
           elevation={0}
+          sx={{ top: 0 }}
         >
           <Toolbar
             sx={{
@@ -96,6 +100,10 @@ export default function AppLayout() {
           component="main"
           sx={{
             flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
             p: {
               xs: 2,
               md: 3,
