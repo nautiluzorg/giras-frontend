@@ -13,7 +13,10 @@ import { useAttempt } from '../hooks/useAttempt';
 
 import { useQuestions } from '../../question/hooks/useQuestions';
 
+
 import { useAttemptStore } from '../stores/attemptStore';
+
+import QuestionNavigator from '../components/QuestionNavigator';
 
 export default function AttemptPage() {
   const { attemptId } = useParams();
@@ -257,8 +260,10 @@ export default function AttemptPage() {
                       value={option.id}
                       control={<Radio />}
                       label={
-                        `${option.order}. ${option.option_text}`
-                      }
+                          `${String.fromCharCode(
+                            96 + option.order
+                          )}. ${option.option_text}`
+                        }
                       sx={{
                         mb: 1,
                       }}
@@ -336,6 +341,19 @@ export default function AttemptPage() {
         </Typography>
       </Box>
 
+      {/* ================================== */}
+      {/* QUESTION NAVIGATOR */}
+      {/* ================================== */}
+
+      <Box
+        sx={{
+          mt: 4,
+        }}
+      >
+        <QuestionNavigator
+          totalQuestions={totalQuestions}
+        />
+      </Box>
     </Box>
   );
 }
