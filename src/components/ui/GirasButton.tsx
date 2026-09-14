@@ -1,19 +1,4 @@
 
-/*
-import {
-  Button,
-  type ButtonProps,
-} from '@mui/material';
-
-export default function GirasButton(props: ButtonProps) {
-  return (
-    <Button
-      {...props}
-      disableElevation
-    />
-  );
-}
-*/
 
 import {
   Button,

@@ -13,7 +13,6 @@ import { useAttempt } from '../hooks/useAttempt';
 
 import { useQuestions } from '../../question/hooks/useQuestions';
 
-
 import { useAttemptStore } from '../stores/attemptStore';
 
 import QuestionNavigator from '../components/QuestionNavigator';
@@ -54,9 +53,16 @@ export default function AttemptPage() {
       (state) => state.currentPage
     );
 
+  const currentQuestionIndex =
+    useAttemptStore(
+      (state) =>
+        state.currentQuestionIndex
+    );
+
   const questionsPerPage =
     useAttemptStore(
-      (state) => state.questionsPerPage
+      (state) =>
+        state.questionsPerPage
     );
 
   const answers =
@@ -64,10 +70,32 @@ export default function AttemptPage() {
       (state) => state.answers
     );
 
+  const markedForReview =
+    useAttemptStore(
+      (state) =>
+        state.markedForReview
+    );
+
+  const getAnsweredCount =
+  useAttemptStore(
+    (state) =>
+      state.getAnsweredCount
+  );
+
+  const getMarkedForReviewCount =
+    useAttemptStore(
+      (state) =>
+        state.getMarkedForReviewCount
+    );
+
   const setAnswer =
     useAttemptStore(
       (state) => state.setAnswer
     );
+
+  // ========================================
+  // PAGE NAVIGATION
+  // ========================================
 
   const nextPage =
     useAttemptStore(
@@ -76,7 +104,18 @@ export default function AttemptPage() {
 
   const previousPage =
     useAttemptStore(
-      (state) => state.previousPage
+      (state) =>
+        state.previousPage
+    );
+
+  // ========================================
+  // REVIEW
+  // ========================================
+
+  const toggleMarkForReview =
+    useAttemptStore(
+      (state) =>
+        state.toggleMarkForReview
     );
 
   // ========================================
@@ -161,6 +200,16 @@ export default function AttemptPage() {
   const totalQuestions =
     questions.length;
 
+  const answeredCount =
+  getAnsweredCount();
+
+  const markedForReviewCount =
+    getMarkedForReviewCount();
+
+  const unansweredCount =
+    totalQuestions -
+    answeredCount;
+
   const totalPages =
     Math.ceil(
       totalQuestions /
@@ -190,217 +239,541 @@ export default function AttemptPage() {
       sx={{
         flex: 1,
         minHeight: 0,
+
         display: 'flex',
         flexDirection: 'column',
+
         overflow: 'hidden',
       }}
-
     >
+
       {/* ================================== */}
       {/* HEADER */}
       {/* ================================== */}
 
-      <Typography variant="h5">
-        Soal Tryout
-      </Typography>
-
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ mt: 1 }}
+      <Box
+        sx={{
+          flexShrink: 0,
+        }}
       >
-        Halaman {currentPage + 1} dari{' '}
-        {totalPages}
-      </Typography>
+
+        <Typography variant="h5">
+          Soal Tryout
+        </Typography>
+
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{
+            mt: 1,
+          }}
+        >
+          Halaman {currentPage + 1} dari{' '}
+          {totalPages}
+        </Typography>
+
+      </Box>
+
+      {/* ================================== */}
+      {/* MAIN CONTENT */}
+      {/* ================================== */}
 
       <Box
         sx={{
           display: 'grid',
+
           flex: 1,
           minHeight: 0,
+
           overflow: 'hidden',
+
           gridTemplateColumns: {
             xs: '1fr',
             md: 'minmax(0, 1fr) 280px',
           },
-          gridTemplateRows: {
-            xs: 'minmax(0, 1fr) auto',
-            md: 'minmax(0, 1fr)',
-          },
+
           gap: {
             xs: 3,
             md: 4,
           },
+
           alignItems: 'stretch',
+
           mt: 3,
         }}
       >
+
+        {/* ================================== */}
+        {/* LEFT COLUMN */}
+        {/* ================================== */}
+
         <Box
           sx={{
             minWidth: 0,
             minHeight: 0,
-            overflowY: 'auto',
+
+            display: 'flex',
+            flexDirection: 'column',
+
+            overflow: 'hidden',
           }}
         >
 
-      {/* ================================== */}
-      {/* QUESTIONS */}
-      {/* ================================== */}
+          {/* ================================== */}
+          {/* QUESTION SCROLL AREA */}
+          {/* ================================== */}
 
-      <Box>
+          <Box
+            sx={{
+              flex: 1,
 
-        {currentQuestions.map(
-          (question) => (
+              minWidth: 0,
+              minHeight: 0,
+
+              overflowY: 'auto',
+
+              pr: {
+                xs: 0,
+                md: 1,
+              },
+            }}
+          >
+
+            {/* ================================== */}
+            {/* QUESTIONS */}
+            {/* ================================== */}
+
+            <Box>
+
+              {currentQuestions.map(
+                (question) => {
+
+                  // ==================================
+                  // REVIEW STATUS
+                  // ==================================
+
+                  const isQuestionMarked =
+                    markedForReview[
+                      question.id
+                    ] === true;
+
+                  const isCurrentQuestion =
+                    question.id ===
+                    questions[currentQuestionIndex]?.id;
+
+                  return (
+                    <Box
+                        key={question.id}
+                        sx={{
+                          mb: 3,
+                          p: 3,
+
+                          border: '1px solid',
+
+                          borderColor:
+                            isCurrentQuestion
+                              ? 'primary.main'
+                              : 'divider',
+
+                          backgroundColor:
+                            isCurrentQuestion
+                              ? 'action.hover'
+                              : 'background.paper',
+
+                          borderRadius: 2,
+
+                          transition:
+                            'border-color 0.2s ease, background-color 0.2s ease',
+                        }}
+                      >
+
+                      {/* ================================ */}
+                      {/* QUESTION */}
+                      {/* ================================ */}
+
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          mb: 3,
+                        }}
+                      >
+                        {question.order}.{' '}
+                        {
+                          question.question_text
+                        }
+                      </Typography>
+
+                      {/* ================================ */}
+                      {/* ANSWERS */}
+                      {/* ================================ */}
+
+                      <RadioGroup
+  value={
+    answers[
+      question.id
+    ] ?? ''
+  }
+  onChange={(event) => {
+    const optionId =
+      Number(
+        event.target.value
+      );
+
+    setAnswer(
+      question.id,
+      optionId
+    );
+  }}
+  sx={{
+    display: 'grid',
+
+    gridTemplateColumns: {
+      xs: '1fr',
+      sm: 'repeat(3, 1fr)',
+    },
+
+    columnGap: 3,
+    rowGap: 1,
+  }}
+>
+  {question.options.map(
+    (option) => (
+
+      <FormControlLabel
+  key={option.id}
+  value={option.id}
+  control={<Radio />}
+  label={
+    `${String.fromCharCode(
+      96 + option.order
+    )}. ${
+      option.option_text
+    }`
+  }
+  sx={{
+    mb: 0,
+    mr: 0,
+
+    gridColumn: {
+      xs: '1',
+      sm:
+        option.order === 1 ||
+        option.order === 2
+          ? '1'
+          : option.order === 3 ||
+            option.order === 4
+          ? '2'
+          : '3',
+    },
+
+    gridRow: {
+      xs: 'auto',
+      sm:
+        option.order === 1 ||
+        option.order === 3 ||
+        option.order === 5
+          ? '1'
+          : '2',
+    },
+  }}
+/>
+    )
+  )}
+</RadioGroup>
+
+                      {/* ================================ */}
+                      {/* MARK FOR REVIEW */}
+                      {/* ================================ */}
+
+                      <Box
+                        sx={{
+                          mt: 2,
+                        }}
+                      >
+
+                        <Button
+                          variant={
+                            isQuestionMarked
+                              ? 'contained'
+                              : 'outlined'
+                          }
+
+                          color="warning"
+
+                          onClick={() =>
+                            toggleMarkForReview(
+                              question.id
+                            )
+                          }
+                        >
+                          {isQuestionMarked
+                            ? 'Batalkan Ragu-ragu'
+                            : 'Tandai Ragu-ragu'}
+                        </Button>
+
+                      </Box>
+
+                    </Box>
+                  );
+                }
+              )}
+
+            </Box>
+
+          </Box>
+
+          {/* ================================== */}
+          {/* FOOTER PAGE NAVIGATION */}
+          {/* ================================== */}
+
+          <Box
+            component="footer"
+            sx={{
+              flexShrink: 0,
+
+              borderTop:
+                '1px solid',
+
+              borderColor:
+                'divider',
+
+              backgroundColor:
+                'background.paper',
+
+              px: {
+                xs: 1,
+                sm: 2,
+                md: 3,
+              },
+
+              py: 2,
+
+              mt: 1,
+
+              zIndex: 10,
+            }}
+          >
+
             <Box
-              key={question.id}
               sx={{
-                mb: 3,
-                p: 3,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
+                display: 'flex',
+
+                justifyContent:
+                  'space-between',
+
+                alignItems: 'center',
+
+                gap: 2,
               }}
             >
 
-              {/* QUESTION */}
+              {/* ================================ */}
+              {/* PREVIOUS PAGE */}
+              {/* ================================ */}
+
+              <Button
+                variant="outlined"
+
+                disabled={
+                  currentPage === 0
+                }
+
+                onClick={() =>
+                  previousPage()
+                }
+              >
+                Sebelumnya
+              </Button>
+
+              {/* ================================ */}
+              {/* PAGE INFORMATION */}
+              {/* ================================ */}
 
               <Typography
-                variant="h6"
-                sx={{ mb: 3 }}
-              >
-                {question.order}.{' '}
-                {question.question_text}
-              </Typography>
-
-              {/* ANSWERS */}
-
-              <RadioGroup
-                value={
-                  answers[question.id] ??
-                  ''
-                }
-                onChange={(event) => {
-                  const optionId =
-                    Number(
-                      event.target.value
-                    );
-
-                  setAnswer(
-                    question.id,
-                    optionId
-                  );
+                variant="body2"
+                color="text.secondary"
+                sx={{
+                  textAlign:
+                    'center',
                 }}
               >
-                {question.options.map(
-                  (option) => (
-                    <FormControlLabel
-                      key={option.id}
-                      value={option.id}
-                      control={<Radio />}
-                      label={
-                          `${String.fromCharCode(
-                            96 + option.order
-                          )}. ${option.option_text}`
-                        }
-                      sx={{
-                        mb: 1,
-                      }}
-                    />
+                Halaman{' '}
+                {currentPage + 1}{' '}
+                dari {totalPages}
+              </Typography>
+
+              {/* ================================ */}
+              {/* NEXT PAGE */}
+              {/* ================================ */}
+
+              <Button
+                variant="contained"
+
+                disabled={
+                  currentPage >=
+                  totalPages - 1
+                }
+
+                onClick={() =>
+                  nextPage(
+                    totalQuestions
                   )
-                )}
-              </RadioGroup>
+                }
+              >
+                Berikutnya
+              </Button>
 
             </Box>
-          )
-        )}
 
-      </Box>
+          </Box>
 
-      {/* ================================== */}
-      {/* PAGINATION BUTTON */}
-      {/* ================================== */}
+        </Box>
 
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent:
-            'space-between',
-          mt: 3,
-        }}
-      >
+        {/* ================================== */}
+        {/* RIGHT SIDEBAR */}
+        {/* ================================== */}
 
-        <Button
-          variant="outlined"
-          disabled={
-            currentPage === 0
-          }
-          onClick={() =>
-            previousPage()
-          }
+        <Box
+          component="aside"
+          sx={{
+            position: {
+              md: 'sticky',
+            },
+
+            top: {
+              md: 24,
+            },
+
+            alignSelf: 'start',
+
+            minHeight: 0,
+          }}
         >
-          Sebelumnya
-        </Button>
 
-        <Button
-          variant="contained"
-          disabled={
-            currentPage ===
-            totalPages - 1
-          }
-          onClick={() =>
-            nextPage(totalQuestions)
-          }
-        >
-          Berikutnya
-        </Button>
+          {/* ================================== */}
+{/* PROGRESS */}
+{/* ================================== */}
+
+<Box
+  sx={{
+    mb: 3,
+  }}
+>
+  <Typography
+    variant="subtitle2"
+    sx={{
+      mb: 2,
+    }}
+  >
+    Progress Pengerjaan
+  </Typography>
+
+  {/* ================================ */}
+  {/* ANSWERED */}
+  {/* ================================ */}
+
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+
+      mb: 1,
+    }}
+  >
+    <Typography
+      variant="body2"
+      color="text.secondary"
+    >
+      Sudah dijawab
+    </Typography>
+
+    <Typography
+      variant="body2"
+      sx={{  fontWeight:600     }}
+    >
+      {answeredCount} / {totalQuestions}
+    </Typography>
+  </Box>
+
+  {/* ================================ */}
+  {/* REVIEW */}
+  {/* ================================ */}
+
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+
+      mb: 1,
+    }}
+  >
+    <Typography
+      variant="body2"
+      color="text.secondary"
+    >
+      Ragu-ragu
+    </Typography>
+
+   
+
+<Typography
+  variant="body2"
+  sx={{ fontWeight: 600 }}
+>
+  {markedForReviewCount} / {totalQuestions}
+</Typography>
+
+  </Box>
+
+  {/* ================================ */}
+  {/* UNANSWERED */}
+  {/* ================================ */}
+
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent:
+        'space-between',
+    }}
+  >
+    <Typography
+      variant="body2"
+      color="text.secondary"
+    >
+      Belum dijawab
+    </Typography>
+
+    <Typography
+  variant="body2"
+  sx={{ fontWeight: 600 }}
+>
+  {unansweredCount} / {totalQuestions}
+</Typography>
+  </Box>
+</Box>
+
+          {/* ================================== */}
+          {/* QUESTION NAVIGATOR */}
+          {/* ================================== */}
+
+          <QuestionNavigator
+            questions={questions.map(
+              (question) => ({
+                id: question.id,
+                order: question.order,
+              })
+            )}
+          />
+
+        </Box>
 
       </Box>
 
-      {/* ================================== */}
-      {/* PAGE INFORMATION */}
-      {/* ================================== */}
-
-      <Box
-        sx={{
-          mt: 3,
-          textAlign: 'center',
-        }}
-      >
-        <Typography
-          variant="body2"
-          color="text.secondary"
-        >
-          Soal {startIndex + 1} -{' '}
-          {Math.min(
-            endIndex,
-            totalQuestions
-          )}{' '}
-          dari {totalQuestions}
-        </Typography>
-      </Box>
-
-      </Box>
-      {/* ================================== */}
-      {/* QUESTION NAVIGATOR */}
-      {/* ================================== */}
-
-      <Box
-        component="aside"
-        sx={{
-          position: {
-            md: 'sticky',
-          },
-          top: {
-            md: 24,
-          },
-          alignSelf: 'start',
-        }}
-      >
-        <QuestionNavigator
-          totalQuestions={totalQuestions}
-        />
-      </Box>
-      </Box>
     </Box>
   );
 }

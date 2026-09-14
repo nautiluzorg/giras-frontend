@@ -1,16 +1,12 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from 'react-router-dom';
-
-import AppLayout from '@/layouts/AppLayout';
-import ExamListPage from '@/domains/assessment/exam/pages/ExamListPage';
-import ExamDetailPage from '@/domains/assessment/exam/pages/ExamDetailPage';
-import AttemptPage from '@/domains/assessment/attempt/pages/AttemptPage';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import AppLayout from "@/layouts/AppLayout";
+import ExamListPage from "@/domains/assessment/exam/pages/ExamListPage";
+import ExamDetailPage from "@/domains/assessment/exam/pages/ExamDetailPage";
+import AttemptPage from "@/domains/assessment/attempt/pages/AttemptPage";
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <AppLayout />,
     children: [
       {
@@ -18,24 +14,18 @@ const router = createBrowserRouter([
         element: <div>Dashboard Giras</div>,
       },
       {
-        path: 'exams',
+        path: "exams",
         element: <ExamListPage />,
       },
       {
-  path: 'exams/:id',
-  element: <ExamDetailPage />,
-},
+        path: "exams/:id",
+        element: <ExamDetailPage />,
+      },
 
-{
-  path: 'attempts/:attemptId',
-  element: <AttemptPage />,
-},
-
-
-
-
-
-
+      {
+        path: "attempts/:attemptId",
+        element: <AttemptPage />,
+      },
     ],
   },
 ]);

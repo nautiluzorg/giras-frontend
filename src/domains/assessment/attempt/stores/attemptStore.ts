@@ -2,10 +2,12 @@ import { create } from 'zustand';
 
 interface AttemptState {
   // ========================================
-  // PAGINATION
+  // NAVIGATION
   // ========================================
 
   currentPage: number;
+
+  currentQuestionIndex: number;
 
   questionsPerPage: number;
 
@@ -16,16 +18,43 @@ interface AttemptState {
   answers: Record<number, number>;
 
   // ========================================
-  // PAGINATION ACTIONS
+  // MARK FOR REVIEW
+  // ========================================
+
+  markedForReview: Record<
+    number,
+    boolean
+  >;
+
+  // ========================================
+  // NAVIGATION ACTIONS
   // ========================================
 
   setCurrentPage: (page: number) => void;
 
-  setQuestionsPerPage: (count: number) => void;
+  setCurrentQuestionIndex: (
+    index: number
+  ) => void;
 
-  nextPage: (totalQuestions: number) => void;
+  goToQuestion: (
+    questionIndex: number
+  ) => void;
+
+  setQuestionsPerPage: (
+    count: number
+  ) => void;
+
+  nextPage: (
+    totalQuestions: number
+  ) => void;
 
   previousPage: () => void;
+
+  nextQuestion: (
+    totalQuestions: number
+  ) => void;
+
+  previousQuestion: () => void;
 
   // ========================================
   // ANSWER ACTION
@@ -35,83 +64,359 @@ interface AttemptState {
     questionId: number,
     optionId: number
   ) => void;
+
+  // ========================================
+  // REVIEW ACTION
+  // ========================================
+
+  toggleMarkForReview: (
+    questionId: number
+  ) => void;
+
+  // ========================================
+  // QUESTION STATUS
+  // ========================================
+
+  isQuestionAnswered: (
+    questionId: number
+  ) => boolean;
+
+  isQuestionMarkedForReview: (
+    questionId: number
+  ) => boolean;
+
+  getAnsweredCount: () => number;
+
+  getMarkedForReviewCount: () => number;
 }
 
 export const useAttemptStore =
-  create<AttemptState>((set) => ({
-    // ========================================
-    // INITIAL STATE
-    // ========================================
+  create<AttemptState>(
+    (set, get) => ({
 
-    currentPage: 0,
+      // ========================================
+      // INITIAL STATE
+      // ========================================
 
-    questionsPerPage: 5,
+      currentPage: 0,
 
-    answers: {},
+      currentQuestionIndex: 0,
 
-    // ========================================
-    // SET CURRENT PAGE
-    // ========================================
+      questionsPerPage: 5,
 
-    setCurrentPage: (page) =>
-      set({
-        currentPage: page,
-      }),
+      answers: {},
 
-    // ========================================
-    // SET QUESTIONS PER PAGE
-    // ========================================
+      markedForReview: {},
 
-    setQuestionsPerPage: (count) =>
-      set({
-        questionsPerPage: count,
-        currentPage: 0,
-      }),
+      // ========================================
+      // SET CURRENT PAGE
+      // ========================================
 
-    // ========================================
-    // NEXT PAGE
-    // ========================================
+      setCurrentPage: (page) =>
+        set((state) => ({
+          currentPage: page,
 
-    nextPage: (totalQuestions) =>
-      set((state) => {
-        const totalPages = Math.ceil(
-          totalQuestions /
-            state.questionsPerPage
-        );
+          currentQuestionIndex:
+            page *
+            state.questionsPerPage,
+        })),
 
-        return {
+      // ========================================
+      // SET CURRENT QUESTION INDEX
+      // ========================================
+
+      setCurrentQuestionIndex: (
+        index
+      ) =>
+        set((state) => ({
+          currentQuestionIndex:
+            index,
+
           currentPage:
-            state.currentPage <
+            Math.floor(
+              index /
+                state.questionsPerPage
+            ),
+        })),
+
+      // ========================================
+      // GO TO QUESTION
+      // ========================================
+
+      goToQuestion: (
+        questionIndex
+      ) =>
+        set((state) => ({
+          currentQuestionIndex:
+            questionIndex,
+
+          currentPage:
+            Math.floor(
+              questionIndex /
+                state.questionsPerPage
+            ),
+        })),
+
+      // ========================================
+      // SET QUESTIONS PER PAGE
+      // ========================================
+
+      setQuestionsPerPage: (
+        count
+      ) =>
+        set({
+          questionsPerPage: count,
+
+          currentPage: 0,
+
+          currentQuestionIndex: 0,
+        }),
+
+      // ========================================
+      // NEXT PAGE
+      // ========================================
+
+      nextPage: (
+        totalQuestions
+      ) =>
+        set((state) => {
+          const totalPages =
+            Math.ceil(
+              totalQuestions /
+                state.questionsPerPage
+            );
+
+          if (
+            state.currentPage >=
             totalPages - 1
-              ? state.currentPage + 1
-              : state.currentPage,
-        };
-      }),
+          ) {
+            return state;
+          }
 
-    // ========================================
-    // PREVIOUS PAGE
-    // ========================================
+          const nextPage =
+            state.currentPage + 1;
 
-    previousPage: () =>
-      set((state) => ({
-        currentPage:
-          state.currentPage > 0
-            ? state.currentPage - 1
-            : 0,
-      })),
+          return {
+            currentPage:
+              nextPage,
 
-    // ========================================
-    // SET ANSWER
-    // ========================================
+            currentQuestionIndex:
+              nextPage *
+              state.questionsPerPage,
+          };
+        }),
 
-    setAnswer: (
-      questionId,
-      optionId
-    ) =>
-      set((state) => ({
-        answers: {
-          ...state.answers,
-          [questionId]: optionId,
-        },
-      })),
-  }));
+      // ========================================
+      // PREVIOUS PAGE
+      // ========================================
+
+      previousPage: () =>
+        set((state) => {
+          if (
+            state.currentPage === 0
+          ) {
+            return state;
+          }
+
+          const previousPage =
+            state.currentPage - 1;
+
+          return {
+            currentPage:
+              previousPage,
+
+            currentQuestionIndex:
+              previousPage *
+              state.questionsPerPage,
+          };
+        }),
+
+      // ========================================
+      // NEXT QUESTION
+      // ========================================
+
+      nextQuestion: (
+        totalQuestions
+      ) =>
+        set((state) => {
+
+          // ==================================
+          // LAST QUESTION
+          // ==================================
+
+          if (
+            state.currentQuestionIndex >=
+            totalQuestions - 1
+          ) {
+            return state;
+          }
+
+          // ==================================
+          // NEXT QUESTION INDEX
+          // ==================================
+
+          const nextQuestionIndex =
+            state.currentQuestionIndex + 1;
+
+          // ==================================
+          // CALCULATE PAGE
+          // ==================================
+
+          const nextPage =
+            Math.floor(
+              nextQuestionIndex /
+                state.questionsPerPage
+            );
+
+          return {
+            currentQuestionIndex:
+              nextQuestionIndex,
+
+            currentPage:
+              nextPage,
+          };
+        }),
+
+      // ========================================
+      // PREVIOUS QUESTION
+      // ========================================
+
+      previousQuestion: () =>
+        set((state) => {
+
+          // ==================================
+          // FIRST QUESTION
+          // ==================================
+
+          if (
+            state.currentQuestionIndex === 0
+          ) {
+            return state;
+          }
+
+          // ==================================
+          // PREVIOUS QUESTION INDEX
+          // ==================================
+
+          const previousQuestionIndex =
+            state.currentQuestionIndex - 1;
+
+          // ==================================
+          // CALCULATE PAGE
+          // ==================================
+
+          const previousPage =
+            Math.floor(
+              previousQuestionIndex /
+                state.questionsPerPage
+            );
+
+          return {
+            currentQuestionIndex:
+              previousQuestionIndex,
+
+            currentPage:
+              previousPage,
+          };
+        }),
+
+      // ========================================
+      // SET ANSWER
+      // ========================================
+
+      setAnswer: (
+        questionId,
+        optionId
+      ) =>
+        set((state) => ({
+          answers: {
+            ...state.answers,
+
+            [questionId]:
+              optionId,
+          },
+        })),
+
+      // ========================================
+      // TOGGLE MARK FOR REVIEW
+      // ========================================
+
+      toggleMarkForReview: (
+        questionId
+      ) =>
+        set((state) => {
+          const isMarked =
+            state.markedForReview[
+              questionId
+            ] === true;
+
+          const updatedMarks = {
+            ...state.markedForReview,
+          };
+
+          if (isMarked) {
+            delete updatedMarks[
+              questionId
+            ];
+          } else {
+            updatedMarks[
+              questionId
+            ] = true;
+          }
+
+          return {
+            markedForReview:
+              updatedMarks,
+          };
+        }),
+
+      // ========================================
+      // IS QUESTION ANSWERED
+      // ========================================
+
+      isQuestionAnswered: (
+        questionId
+      ) => {
+        return (
+          get().answers[
+            questionId
+          ] !== undefined
+        );
+      },
+
+      // ========================================
+      // IS QUESTION MARKED
+      // ========================================
+
+      isQuestionMarkedForReview: (
+        questionId
+      ) => {
+        return (
+          get().markedForReview[
+            questionId
+          ] === true
+        );
+      },
+
+      // ========================================
+      // GET ANSWERED COUNT
+      // ========================================
+
+      getAnsweredCount: () => {
+        return Object.keys(
+          get().answers
+        ).length;
+      },
+
+      // ========================================
+      // GET MARKED COUNT
+      // ========================================
+
+      getMarkedForReviewCount: () => {
+        return Object.keys(
+          get().markedForReview
+        ).length;
+      },
+
+    })
+  );

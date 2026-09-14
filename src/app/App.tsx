@@ -1,12 +1,13 @@
-import { AppProviders } from './providers/AppProviders';
+import ThemeProvider from './providers/ThemeProvider';
+import { QueryProvider } from './providers/QueryProvider';
 import { AppRouter } from './router';
 
-function App() {
+export default function App() {
   return (
-    <AppProviders>
-      <AppRouter />
-    </AppProviders>
+    <ThemeProvider>
+      <QueryProvider>
+        <AppRouter />
+      </QueryProvider>
+    </ThemeProvider>
   );
 }
-
-export default App;
