@@ -13,14 +13,19 @@ import { useAttempt } from '../hooks/useAttempt';
 
 import { useQuestions } from '../../question/hooks/useQuestions';
 
+import { useExam } from '../../exam/hooks/useExam';
+
 import { useAttemptStore } from '../stores/attemptStore';
 
 import QuestionNavigator from '../components/QuestionNavigator';
 
+import ExamTimer from '../components/ExamTimer';
+
 export default function AttemptPage() {
   const { attemptId } = useParams();
 
-  const attemptIdNumber = Number(attemptId);
+  const attemptIdNumber =
+    Number(attemptId);
 
   // ========================================
   // ATTEMPT
@@ -33,6 +38,16 @@ export default function AttemptPage() {
   } = useAttempt(attemptIdNumber);
 
   const examId = attempt?.exam;
+
+  // ========================================
+  // EXAM
+  // ========================================
+
+  const {
+    data: exam,
+    isLoading: isExamLoading,
+    isError: isExamError,
+  } = useExam(examId ?? 0);
 
   // ========================================
   // QUESTIONS
@@ -74,18 +89,6 @@ export default function AttemptPage() {
     useAttemptStore(
       (state) =>
         state.markedForReview
-    );
-
-  const getAnsweredCount =
-  useAttemptStore(
-    (state) =>
-      state.getAnsweredCount
-  );
-
-  const getMarkedForReviewCount =
-    useAttemptStore(
-      (state) =>
-        state.getMarkedForReviewCount
     );
 
   const setAnswer =
@@ -155,6 +158,42 @@ export default function AttemptPage() {
   }
 
   // ========================================
+  // LOADING EXAM
+  // ========================================
+
+  if (isExamLoading) {
+    return (
+      <Typography>
+        Memuat data ujian...
+      </Typography>
+    );
+  }
+
+  // ========================================
+  // ERROR EXAM
+  // ========================================
+
+  if (isExamError) {
+    return (
+      <Typography color="error">
+        Gagal mengambil data ujian.
+      </Typography>
+    );
+  }
+
+  // ========================================
+  // EXAM NOT FOUND
+  // ========================================
+
+  if (!exam) {
+    return (
+      <Typography color="error">
+        Data ujian tidak ditemukan.
+      </Typography>
+    );
+  }
+
+  // ========================================
   // LOADING QUESTIONS
   // ========================================
 
@@ -200,16 +239,6 @@ export default function AttemptPage() {
   const totalQuestions =
     questions.length;
 
-  const answeredCount =
-  getAnsweredCount();
-
-  const markedForReviewCount =
-    getMarkedForReviewCount();
-
-  const unansweredCount =
-    totalQuestions -
-    answeredCount;
-
   const totalPages =
     Math.ceil(
       totalQuestions /
@@ -240,537 +269,453 @@ export default function AttemptPage() {
         flex: 1,
         minHeight: 0,
 
-        display: 'flex',
-        flexDirection: 'column',
+        display: 'grid',
+
+        gridTemplateColumns: {
+          xs: '1fr',
+          md: 'minmax(0, 1fr) 280px',
+        },
+
+        gridTemplateRows:
+          'minmax(0, 1fr)',
+
+        gap: {
+          xs: 3,
+          md: 4,
+        },
 
         overflow: 'hidden',
       }}
     >
 
       {/* ================================== */}
-      {/* HEADER */}
+      {/* LEFT COLUMN */}
+      {/* HEADER + QUESTIONS + FOOTER */}
       {/* ================================== */}
 
       <Box
         sx={{
-          flexShrink: 0,
+          minWidth: 0,
+          minHeight: 0,
+
+          display: 'flex',
+          flexDirection: 'column',
+
+          overflow: 'hidden',
         }}
       >
 
-        <Typography variant="h5">
-          Soal Tryout
-        </Typography>
+        {/* ================================== */}
+        {/* HEADER */}
+        {/* ================================== */}
 
-        <Typography
-          variant="body2"
-          color="text.secondary"
+        <Box
           sx={{
-            mt: 1,
+            flexShrink: 0,
+
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent:
+              'space-between',
+
+            gap: 2,
           }}
         >
-          Halaman {currentPage + 1} dari{' '}
-          {totalPages}
-        </Typography>
+
+          {/* ================================= */}
+          {/* TITLE + PAGE */}
+          {/* ================================= */}
+
+          <Box>
+            <Typography variant="h5">
+              Soal Tryout
+            </Typography>
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 1,
+              }}
+            >
+              Halaman{' '}
+              {currentPage + 1}{' '}
+              dari {totalPages}
+            </Typography>
+          </Box>
+
+          {/* ================================= */}
+          {/* EXAM TIMER */}
+          {/* ================================= */}
+
+          <ExamTimer
+            startedAt={
+              attempt.started_at
+            }
+            durationMinutes={
+              exam.duration
+            }
+          />
+
+        </Box>
+
+        {/* ================================== */}
+        {/* QUESTION SCROLL AREA */}
+        {/* ================================== */}
+
+        <Box
+          sx={{
+            flex: 1,
+
+            minWidth: 0,
+            minHeight: 0,
+
+            overflowY: 'auto',
+
+            mt: 3,
+
+            pr: {
+              xs: 0,
+              md: 1,
+            },
+          }}
+        >
+
+          {/* ================================== */}
+          {/* QUESTIONS */}
+          {/* ================================== */}
+
+          <Box>
+
+            {currentQuestions.map(
+              (question) => {
+
+                // ==================================
+                // REVIEW STATUS
+                // ==================================
+
+                const isQuestionMarked =
+                  markedForReview[
+                    question.id
+                  ] === true;
+
+                // ==================================
+                // CURRENT QUESTION
+                // ==================================
+
+                const isCurrentQuestion =
+                  question.id ===
+                  questions[
+                    currentQuestionIndex
+                  ]?.id;
+
+                return (
+                  <Box
+                    key={question.id}
+                    sx={{
+                      mb: 3,
+                      p: 3,
+
+                      border:
+                        '1px solid',
+
+                      borderColor:
+                        isCurrentQuestion
+                          ? 'primary.main'
+                          : 'divider',
+
+                      backgroundColor:
+                        isCurrentQuestion
+                          ? 'action.hover'
+                          : 'background.paper',
+
+                      borderRadius: 2,
+
+                      transition:
+                        'border-color 0.2s ease, background-color 0.2s ease',
+                    }}
+                  >
+
+                    {/* ================================ */}
+                    {/* QUESTION */}
+                    {/* ================================ */}
+
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        mb: 3,
+                      }}
+                    >
+                      {question.order}.{' '}
+                      {
+                        question.question_text
+                      }
+                    </Typography>
+
+                    {/* ================================ */}
+                    {/* ANSWERS */}
+                    {/* ================================ */}
+
+                    <RadioGroup
+                      value={
+                        answers[
+                          question.id
+                        ] ?? ''
+                      }
+                      onChange={(event) => {
+                        const optionId =
+                          Number(
+                            event.target.value
+                          );
+
+                        setAnswer(
+                          question.id,
+                          optionId
+                        );
+                      }}
+                      sx={{
+                        display: 'grid',
+
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          sm: 'repeat(3, 1fr)',
+                        },
+
+                        columnGap: 3,
+                        rowGap: 1,
+                      }}
+                    >
+
+                      {question.options.map(
+                        (option) => (
+
+                          <FormControlLabel
+                            key={option.id}
+                            value={
+                              option.id
+                            }
+                            control={
+                              <Radio />
+                            }
+                            label={
+                              `${String.fromCharCode(
+                                96 +
+                                  option.order
+                              )}. ${
+                                option.option_text
+                              }`
+                            }
+                            sx={{
+                              mb: 0,
+                              mr: 0,
+
+                              gridColumn: {
+                                xs: '1',
+
+                                sm:
+                                  option.order ===
+                                    1 ||
+                                  option.order ===
+                                    2
+                                    ? '1'
+                                    : option.order ===
+                                        3 ||
+                                      option.order ===
+                                        4
+                                    ? '2'
+                                    : '3',
+                              },
+
+                              gridRow: {
+                                xs: 'auto',
+
+                                sm:
+                                  option.order ===
+                                    1 ||
+                                  option.order ===
+                                    3 ||
+                                  option.order ===
+                                    5
+                                    ? '1'
+                                    : '2',
+                              },
+                            }}
+                          />
+                        )
+                      )}
+
+                    </RadioGroup>
+
+                    {/* ================================ */}
+                    {/* MARK FOR REVIEW */}
+                    {/* ================================ */}
+
+                    <Box
+                      sx={{
+                        mt: 2,
+                      }}
+                    >
+
+                      <Button
+                        variant={
+                          isQuestionMarked
+                            ? 'contained'
+                            : 'outlined'
+                        }
+                        color="warning"
+                        onClick={() =>
+                          toggleMarkForReview(
+                            question.id
+                          )
+                        }
+                      >
+                        {isQuestionMarked
+                          ? 'Batalkan Ragu-ragu'
+                          : 'Tandai Ragu-ragu'}
+                      </Button>
+
+                    </Box>
+
+                  </Box>
+                );
+              }
+            )}
+
+          </Box>
+
+        </Box>
+
+        {/* ================================== */}
+        {/* FOOTER PAGE NAVIGATION */}
+        {/* ================================== */}
+
+        <Box
+          component="footer"
+          sx={{
+            flexShrink: 0,
+
+            borderTop:
+              '1px solid',
+
+            borderColor:
+              'divider',
+
+            backgroundColor:
+              'background.paper',
+
+            px: {
+              xs: 1,
+              sm: 2,
+              md: 3,
+            },
+
+            py: 2,
+
+            mt: 1,
+
+            zIndex: 10,
+          }}
+        >
+
+          <Box
+            sx={{
+              display: 'flex',
+
+              justifyContent:
+                'space-between',
+
+              alignItems: 'center',
+
+              gap: 2,
+            }}
+          >
+
+            {/* ================================ */}
+            {/* PREVIOUS PAGE */}
+            {/* ================================ */}
+
+            <Button
+              variant="outlined"
+              disabled={
+                currentPage === 0
+              }
+              onClick={() =>
+                previousPage()
+              }
+            >
+              Sebelumnya
+            </Button>
+
+            {/* ================================ */}
+            {/* PAGE INFORMATION */}
+            {/* ================================ */}
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                textAlign: 'center',
+              }}
+            >
+              Halaman{' '}
+              {currentPage + 1}{' '}
+              dari {totalPages}
+            </Typography>
+
+            {/* ================================ */}
+            {/* NEXT PAGE */}
+            {/* ================================ */}
+
+            <Button
+              variant="contained"
+              disabled={
+                currentPage >=
+                totalPages - 1
+              }
+              onClick={() =>
+                nextPage(
+                  totalQuestions
+                )
+              }
+            >
+              Berikutnya
+            </Button>
+
+          </Box>
+
+        </Box>
 
       </Box>
 
       {/* ================================== */}
-      {/* MAIN CONTENT */}
+      {/* RIGHT SIDEBAR */}
       {/* ================================== */}
 
       <Box
+        component="aside"
         sx={{
-          display: 'grid',
-
-          flex: 1,
+          minWidth: 0,
           minHeight: 0,
 
+          display: 'flex',
+          flexDirection: 'column',
+
           overflow: 'hidden',
-
-          gridTemplateColumns: {
-            xs: '1fr',
-            md: 'minmax(0, 1fr) 280px',
-          },
-
-          gap: {
-            xs: 3,
-            md: 4,
-          },
-
-          alignItems: 'stretch',
-
-          mt: 3,
         }}
       >
 
         {/* ================================== */}
-        {/* LEFT COLUMN */}
+        {/* QUESTION NAVIGATOR */}
         {/* ================================== */}
 
-        <Box
-          sx={{
-            minWidth: 0,
-            minHeight: 0,
-
-            display: 'flex',
-            flexDirection: 'column',
-
-            overflow: 'hidden',
-          }}
-        >
-
-          {/* ================================== */}
-          {/* QUESTION SCROLL AREA */}
-          {/* ================================== */}
-
-          <Box
-            sx={{
-              flex: 1,
-
-              minWidth: 0,
-              minHeight: 0,
-
-              overflowY: 'auto',
-
-              pr: {
-                xs: 0,
-                md: 1,
-              },
-            }}
-          >
-
-            {/* ================================== */}
-            {/* QUESTIONS */}
-            {/* ================================== */}
-
-            <Box>
-
-              {currentQuestions.map(
-                (question) => {
-
-                  // ==================================
-                  // REVIEW STATUS
-                  // ==================================
-
-                  const isQuestionMarked =
-                    markedForReview[
-                      question.id
-                    ] === true;
-
-                  const isCurrentQuestion =
-                    question.id ===
-                    questions[currentQuestionIndex]?.id;
-
-                  return (
-                    <Box
-                        key={question.id}
-                        sx={{
-                          mb: 3,
-                          p: 3,
-
-                          border: '1px solid',
-
-                          borderColor:
-                            isCurrentQuestion
-                              ? 'primary.main'
-                              : 'divider',
-
-                          backgroundColor:
-                            isCurrentQuestion
-                              ? 'action.hover'
-                              : 'background.paper',
-
-                          borderRadius: 2,
-
-                          transition:
-                            'border-color 0.2s ease, background-color 0.2s ease',
-                        }}
-                      >
-
-                      {/* ================================ */}
-                      {/* QUESTION */}
-                      {/* ================================ */}
-
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          mb: 3,
-                        }}
-                      >
-                        {question.order}.{' '}
-                        {
-                          question.question_text
-                        }
-                      </Typography>
-
-                      {/* ================================ */}
-                      {/* ANSWERS */}
-                      {/* ================================ */}
-
-                      <RadioGroup
-  value={
-    answers[
-      question.id
-    ] ?? ''
-  }
-  onChange={(event) => {
-    const optionId =
-      Number(
-        event.target.value
-      );
-
-    setAnswer(
-      question.id,
-      optionId
-    );
-  }}
-  sx={{
-    display: 'grid',
-
-    gridTemplateColumns: {
-      xs: '1fr',
-      sm: 'repeat(3, 1fr)',
-    },
-
-    columnGap: 3,
-    rowGap: 1,
-  }}
->
-  {question.options.map(
-    (option) => (
-
-      <FormControlLabel
-  key={option.id}
-  value={option.id}
-  control={<Radio />}
-  label={
-    `${String.fromCharCode(
-      96 + option.order
-    )}. ${
-      option.option_text
-    }`
-  }
-  sx={{
-    mb: 0,
-    mr: 0,
-
-    gridColumn: {
-      xs: '1',
-      sm:
-        option.order === 1 ||
-        option.order === 2
-          ? '1'
-          : option.order === 3 ||
-            option.order === 4
-          ? '2'
-          : '3',
-    },
-
-    gridRow: {
-      xs: 'auto',
-      sm:
-        option.order === 1 ||
-        option.order === 3 ||
-        option.order === 5
-          ? '1'
-          : '2',
-    },
-  }}
-/>
-    )
-  )}
-</RadioGroup>
-
-                      {/* ================================ */}
-                      {/* MARK FOR REVIEW */}
-                      {/* ================================ */}
-
-                      <Box
-                        sx={{
-                          mt: 2,
-                        }}
-                      >
-
-                        <Button
-                          variant={
-                            isQuestionMarked
-                              ? 'contained'
-                              : 'outlined'
-                          }
-
-                          color="warning"
-
-                          onClick={() =>
-                            toggleMarkForReview(
-                              question.id
-                            )
-                          }
-                        >
-                          {isQuestionMarked
-                            ? 'Batalkan Ragu-ragu'
-                            : 'Tandai Ragu-ragu'}
-                        </Button>
-
-                      </Box>
-
-                    </Box>
-                  );
-                }
-              )}
-
-            </Box>
-
-          </Box>
-
-          {/* ================================== */}
-          {/* FOOTER PAGE NAVIGATION */}
-          {/* ================================== */}
-
-          <Box
-            component="footer"
-            sx={{
-              flexShrink: 0,
-
-              borderTop:
-                '1px solid',
-
-              borderColor:
-                'divider',
-
-              backgroundColor:
-                'background.paper',
-
-              px: {
-                xs: 1,
-                sm: 2,
-                md: 3,
-              },
-
-              py: 2,
-
-              mt: 1,
-
-              zIndex: 10,
-            }}
-          >
-
-            <Box
-              sx={{
-                display: 'flex',
-
-                justifyContent:
-                  'space-between',
-
-                alignItems: 'center',
-
-                gap: 2,
-              }}
-            >
-
-              {/* ================================ */}
-              {/* PREVIOUS PAGE */}
-              {/* ================================ */}
-
-              <Button
-                variant="outlined"
-
-                disabled={
-                  currentPage === 0
-                }
-
-                onClick={() =>
-                  previousPage()
-                }
-              >
-                Sebelumnya
-              </Button>
-
-              {/* ================================ */}
-              {/* PAGE INFORMATION */}
-              {/* ================================ */}
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{
-                  textAlign:
-                    'center',
-                }}
-              >
-                Halaman{' '}
-                {currentPage + 1}{' '}
-                dari {totalPages}
-              </Typography>
-
-              {/* ================================ */}
-              {/* NEXT PAGE */}
-              {/* ================================ */}
-
-              <Button
-                variant="contained"
-
-                disabled={
-                  currentPage >=
-                  totalPages - 1
-                }
-
-                onClick={() =>
-                  nextPage(
-                    totalQuestions
-                  )
-                }
-              >
-                Berikutnya
-              </Button>
-
-            </Box>
-
-          </Box>
-
-        </Box>
-
-        {/* ================================== */}
-        {/* RIGHT SIDEBAR */}
-        {/* ================================== */}
-
-        <Box
-          component="aside"
-          sx={{
-            position: {
-              md: 'sticky',
-            },
-
-            top: {
-              md: 24,
-            },
-
-            alignSelf: 'start',
-
-            minHeight: 0,
-          }}
-        >
-
-          {/* ================================== */}
-{/* PROGRESS */}
-{/* ================================== */}
-
-<Box
-  sx={{
-    mb: 3,
-  }}
->
-  <Typography
-    variant="subtitle2"
-    sx={{
-      mb: 2,
-    }}
-  >
-    Progress Pengerjaan
-  </Typography>
-
-  {/* ================================ */}
-  {/* ANSWERED */}
-  {/* ================================ */}
-
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent:
-        'space-between',
-
-      mb: 1,
-    }}
-  >
-    <Typography
-      variant="body2"
-      color="text.secondary"
-    >
-      Sudah dijawab
-    </Typography>
-
-    <Typography
-      variant="body2"
-      sx={{  fontWeight:600     }}
-    >
-      {answeredCount} / {totalQuestions}
-    </Typography>
-  </Box>
-
-  {/* ================================ */}
-  {/* REVIEW */}
-  {/* ================================ */}
-
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent:
-        'space-between',
-
-      mb: 1,
-    }}
-  >
-    <Typography
-      variant="body2"
-      color="text.secondary"
-    >
-      Ragu-ragu
-    </Typography>
-
-   
-
-<Typography
-  variant="body2"
-  sx={{ fontWeight: 600 }}
->
-  {markedForReviewCount} / {totalQuestions}
-</Typography>
-
-  </Box>
-
-  {/* ================================ */}
-  {/* UNANSWERED */}
-  {/* ================================ */}
-
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent:
-        'space-between',
-    }}
-  >
-    <Typography
-      variant="body2"
-      color="text.secondary"
-    >
-      Belum dijawab
-    </Typography>
-
-    <Typography
-  variant="body2"
-  sx={{ fontWeight: 600 }}
->
-  {unansweredCount} / {totalQuestions}
-</Typography>
-  </Box>
-</Box>
-
-          {/* ================================== */}
-          {/* QUESTION NAVIGATOR */}
-          {/* ================================== */}
-
-          <QuestionNavigator
-            questions={questions.map(
-              (question) => ({
-                id: question.id,
-                order: question.order,
-              })
-            )}
-          />
-
-        </Box>
+        <QuestionNavigator
+          questions={questions.map(
+            (question) => ({
+              id: question.id,
+              order: question.order,
+            })
+          )}
+        />
 
       </Box>
 

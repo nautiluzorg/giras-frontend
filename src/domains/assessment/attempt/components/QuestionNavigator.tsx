@@ -1,4 +1,4 @@
-
+import { useState } from 'react';
 
 import {
   Box,
@@ -18,6 +18,13 @@ interface QuestionNavigatorProps {
 export default function QuestionNavigator({
   questions,
 }: QuestionNavigatorProps) {
+  // ========================================
+  // LOCAL STATE — SUMMARY VIEW TOGGLE
+  // ========================================
+
+  const [showSummary, setShowSummary] =
+    useState(false);
+
   // ========================================
   // ZUSTAND
   // ========================================
@@ -45,6 +52,18 @@ export default function QuestionNavigator({
         state.goToQuestion
     );
 
+  const getAnsweredCount =
+    useAttemptStore(
+      (state) =>
+        state.getAnsweredCount
+    );
+
+  const getMarkedForReviewCount =
+    useAttemptStore(
+      (state) =>
+        state.getMarkedForReviewCount
+    );
+
   // ========================================
   // QUESTION CLICK
   // ========================================
@@ -56,23 +75,67 @@ export default function QuestionNavigator({
   };
 
   // ========================================
+  // SUMMARY CALCULATION
+  // ========================================
+
+  const totalQuestions =
+    questions.length;
+
+  const answeredCount =
+    getAnsweredCount();
+
+  const markedForReviewCount =
+    getMarkedForReviewCount();
+
+  const unansweredCount =
+    totalQuestions -
+    answeredCount;
+
+  // ========================================
+  // FINISH BUTTON CLICK
+  // ========================================
+
+  const handleFinishClick = () => {
+    setShowSummary(true);
+  };
+
+  // ========================================
+  // CANCEL BUTTON CLICK
+  // ========================================
+
+  const handleCancelClick = () => {
+    setShowSummary(false);
+  };
+
+  // ========================================
+  // SUBMIT BUTTON CLICK
+  // ========================================
+
+  const handleSubmitClick = () => {
+    // TODO: tambahkan logika submit ujian ke server di sini
+    console.log('Ujian selesai dikirim!');
+  };
+
+  // ========================================
   // RENDER
   // ========================================
 
   return (
     <Box
       sx={{
-        /*
-         * Tidak ada padding/margin
-         * tambahan di bagian atas.
-         */
+        height: '100%',
+        minHeight: 0,
+
+        display: 'flex',
+        flexDirection: 'column',
+
         p: 0,
         m: 0,
       }}
     >
 
       {/* ================================== */}
-      {/* TITLE */}
+      {/* TITLE (FIXED) */}
       {/* ================================== */}
 
       <Typography
@@ -81,368 +144,607 @@ export default function QuestionNavigator({
           mb: 1,
           fontWeight: 600,
           mt: 0,
+          flexShrink: 0,
         }}
       >
-        Navigator Soal
+        {showSummary
+          ? 'Ringkasan Pengerjaan'
+          : 'Navigator Soal'}
       </Typography>
 
-      {/* ================================== */}
-      {/* QUESTION BUTTONS */}
-      {/* ================================== */}
+      {/* ==================================================== */}
+      {/* ==================================================== */}
+      {/* MODE: SUMMARY */}
+      {/* ==================================================== */}
+      {/* ==================================================== */}
 
-      <Box
-        sx={{
-          display: 'grid',
+      {showSummary ? (
 
-          /*
-           * Tetap 5 button
-           * dalam 1 baris.
-           */
-          gridTemplateColumns:
-            'repeat(5, 1fr)',
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
 
-          gap: 1,
-        }}
-      >
-        {questions.map(
-          (question, index) => {
+            display: 'flex',
+            flexDirection: 'column',
 
-            // ==================================
-            // CURRENT QUESTION
-            // ==================================
+            justifyContent: 'center',
+          }}
+        >
 
-            const isCurrentQuestion =
-              index ===
-              currentQuestionIndex;
+          {/* ================================== */}
+          {/* SUMMARY LIST */}
+          {/* ================================== */}
 
-            // ==================================
-            // ANSWERED STATUS
-            // ==================================
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
 
-            const isAnswered =
-              answers[
-                question.id
-              ] !== undefined;
+            {/* ================================== */}
+            {/* ANSWERED */}
+            {/* ================================== */}
 
-            // ==================================
-            // REVIEW STATUS
-            // ==================================
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
 
-            const isMarkedForReview =
-              markedForReview[
-                question.id
-              ] === true;
+                p: 1.5,
 
-            // ==================================
-            // BUTTON VARIANT
-            // ==================================
+                borderRadius: 1,
 
-            const buttonVariant =
-              isCurrentQuestion
-                ? 'contained'
-                : 'outlined';
+                bgcolor:
+                  'success.main',
 
-            // ==================================
-            // BUTTON COLOR
-            // ==================================
+                color: '#fff',
+              }}
+            >
+              <Typography
+                variant="body2"
+              >
+                Sudah dijawab
+              </Typography>
 
-            let buttonColor:
-              | 'primary'
-              | 'warning'
-              | 'success'
-              | 'inherit';
-
-            /*
-             * Priority:
-             *
-             * Current
-             * ↓
-             * Review
-             * ↓
-             * Answered
-             * ↓
-             * Unanswered
-             */
-
-            if (
-              isCurrentQuestion
-            ) {
-              buttonColor =
-                'primary';
-            } else if (
-              isMarkedForReview
-            ) {
-              buttonColor =
-                'warning';
-            } else if (
-              isAnswered
-            ) {
-              buttonColor =
-                'success';
-            } else {
-              buttonColor =
-                'inherit';
-            }
-
-            return (
-              <Button
-                key={question.id}
-                variant={
-                  buttonVariant
-                }
-                color={
-                  buttonColor
-                }
-                onClick={() =>
-                  handleQuestionClick(
-                    index
-                  )
-                }
+              <Typography
+                variant="body2"
                 sx={{
-                  minWidth: 45,
-                  height: 45,
+                  fontWeight: 700,
+                }}
+              >
+                {answeredCount} / {totalQuestions}
+              </Typography>
+            </Box>
+
+            {/* ================================== */}
+            {/* MARKED FOR REVIEW */}
+            {/* ================================== */}
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+
+                p: 1.5,
+
+                borderRadius: 1,
+
+                bgcolor:
+                  'warning.main',
+
+                color: '#fff',
+              }}
+            >
+              <Typography
+                variant="body2"
+              >
+                Ragu-ragu
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                }}
+              >
+                {markedForReviewCount} / {totalQuestions}
+              </Typography>
+            </Box>
+
+            {/* ================================== */}
+            {/* UNANSWERED */}
+            {/* ================================== */}
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+
+                p: 1.5,
+
+                borderRadius: 1,
+
+                border: '1px solid',
+                borderColor:
+                  'text.disabled',
+              }}
+            >
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                Belum dijawab
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                }}
+              >
+                {unansweredCount} / {totalQuestions}
+              </Typography>
+            </Box>
+
+            {/* ================================== */}
+            {/* TOTAL */}
+            {/* ================================== */}
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent:
+                  'space-between',
+
+                p: 1.5,
+
+                borderRadius: 1,
+
+                bgcolor:
+                  'action.hover',
+              }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
                   fontWeight: 600,
                 }}
               >
-                {question.order}
+                Total Soal
+              </Typography>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                }}
+              >
+                {totalQuestions}
+              </Typography>
+            </Box>
+
+          </Box>
+
+        </Box>
+
+      ) : (
+
+      /* ==================================================== */
+      /* ==================================================== */
+      /* MODE: NAVIGATOR (DEFAULT) */
+      /* ==================================================== */
+      /* ==================================================== */
+
+        <>
+
+          {/* ================================== */}
+          {/* QUESTION BUTTONS (SCROLLABLE) */}
+          {/* ================================== */}
+
+          <Box
+            sx={{
+              flex: 1,
+              minHeight: 0,
+
+              overflowY: 'auto',
+
+              pr: 0.5,
+
+              display: 'grid',
+
+              /*
+               * Tetap 5 button
+               * dalam 1 baris.
+               */
+              gridTemplateColumns:
+                'repeat(5, 1fr)',
+
+              gap: 1,
+
+              alignContent: 'start',
+            }}
+          >
+            {questions.map(
+              (question, index) => {
+
+                // ==================================
+                // CURRENT QUESTION
+                // ==================================
+
+                const isCurrentQuestion =
+                  index ===
+                  currentQuestionIndex;
+
+                // ==================================
+                // ANSWERED STATUS
+                // ==================================
+
+                const isAnswered =
+                  answers[
+                    question.id
+                  ] !== undefined;
+
+                // ==================================
+                // REVIEW STATUS
+                // ==================================
+
+                const isMarkedForReview =
+                  markedForReview[
+                    question.id
+                  ] === true;
+
+                // ==================================
+                // BUTTON VARIANT
+                // ==================================
+
+                const buttonVariant =
+                  isCurrentQuestion
+                    ? 'contained'
+                    : 'outlined';
+
+                // ==================================
+                // BUTTON COLOR
+                // ==================================
+
+                let buttonColor:
+                  | 'primary'
+                  | 'warning'
+                  | 'success'
+                  | 'inherit';
+
+                /*
+                 * Priority:
+                 *
+                 * Current
+                 * ↓
+                 * Review
+                 * ↓
+                 * Answered
+                 * ↓
+                 * Unanswered
+                 */
+
+                if (
+                  isCurrentQuestion
+                ) {
+                  buttonColor =
+                    'primary';
+                } else if (
+                  isMarkedForReview
+                ) {
+                  buttonColor =
+                    'warning';
+                } else if (
+                  isAnswered
+                ) {
+                  buttonColor =
+                    'success';
+                } else {
+                  buttonColor =
+                    'inherit';
+                }
+
+                return (
+                  <Button
+                    key={question.id}
+                    variant={
+                      buttonVariant
+                    }
+                    color={
+                      buttonColor
+                    }
+                    onClick={() =>
+                      handleQuestionClick(
+                        index
+                      )
+                    }
+                    sx={{
+                      minWidth: 45,
+                      height: 45,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {question.order}
+                  </Button>
+                );
+              }
+            )}
+          </Box>
+
+          {/* ================================== */}
+          {/* BAGIAN BAWAH (FIXED — TIDAK IKUT SCROLL) */}
+          {/* Legend + Info + Tombol SELESAI */}
+          {/* ================================== */}
+
+          <Box
+            sx={{
+              flexShrink: 0,
+            }}
+          >
+
+            {/* ================================== */}
+            {/* LEGEND */}
+            {/* ================================== */}
+
+            <Box
+              sx={{
+                mt: 2,
+
+                display: 'grid',
+                gridTemplateColumns:
+                  'repeat(2, minmax(0, 1fr))',
+
+                columnGap: 2,
+                rowGap: 1.25,
+              }}
+            >
+
+              {/* ================================== */}
+              {/* ANSWERED */}
+              {/* ================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      'success.main',
+                  }}
+                />
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Sudah dijawab
+                </Typography>
+              </Box>
+
+              {/* ================================== */}
+              {/* CURRENT */}
+              {/* ================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      'primary.main',
+                  }}
+                />
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Soal aktif
+                </Typography>
+              </Box>
+
+              {/* ================================== */}
+              {/* UNANSWERED */}
+              {/* ================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor:
+                      'text.disabled',
+                  }}
+                />
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Belum dijawab
+                </Typography>
+              </Box>
+
+              {/* ================================== */}
+              {/* REVIEW */}
+              {/* ================================== */}
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                }}
+              >
+                <Box
+                  sx={{
+                    flexShrink: 0,
+                    width: 16,
+                    height: 16,
+                    borderRadius: 1,
+                    bgcolor:
+                      'warning.main',
+                  }}
+                />
+
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                >
+                  Ragu-ragu
+                </Typography>
+              </Box>
+
+            </Box>
+
+            {/* ================================== */}
+            {/* INFORMATION */}
+            {/* ================================== */}
+
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 2,
+              }}
+            >
+              Soal{' '}
+              {currentQuestionIndex + 1}{' '}
+              dari {questions.length}
+            </Typography>
+
+            {/* ================================== */}
+            {/* SELESAI BUTTON */}
+            {/* ================================== */}
+
+            <Box
+              sx={{
+                mt: 3,
+                display: 'flex',
+                justifyContent: 'center',
+              }}
+            >
+              <Button
+                variant="contained"
+                size="large"
+                sx={{
+                  px: 8,
+                  py: 2,
+                  fontWeight: 600,
+                  borderRadius: 1,
+                  textTransform: 'uppercase',
+                  background: 'linear-gradient(to bottom, #448AFF, #0D47A1)',
+                  color: '#fff',
+                  boxShadow: '0 4px 10px rgba(13, 71, 161, 0.3)',
+                  '&:hover': {
+                    background: 'linear-gradient(to bottom, #2979FF, #0D47A1)',
+                  },
+                }}
+                onClick={handleFinishClick}
+              >
+                SELESAI
               </Button>
-            );
-          }
-        )}
-      </Box>
+            </Box>
 
-      {/* ================================== */}
-      {/* LEGEND */}
-      {/* ================================== */}
+          </Box>
 
-      <Box
-        sx={{
-          /*
-           * Tetap dekat dengan
-           * navigator.
-           */
-          mt: 2,
+        </>
 
-          /*
-           * 2 kolom.
-           */
-          display: 'grid',
-          gridTemplateColumns:
-            'repeat(2, minmax(0, 1fr))',
+      )}
 
-          columnGap: 2,
-          rowGap: 1.25,
-        }}
-      >
+      {/* ==================================================== */}
+      {/* CANCEL & SUBMIT BUTTON (HANYA MUNCUL DI MODE SUMMARY) */}
+      {/* ==================================================== */}
 
-        {/* ================================== */}
-        {/* ANSWERED */}
-        {/* ================================== */}
+      {showSummary && (
 
         <Box
           sx={{
+            flexShrink: 0,
+
+            mt: 3,
+
             display: 'flex',
-            alignItems: 'center',
-            gap: 1,
+            gap: 1.5,
           }}
         >
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              bgcolor:
-                'success.main',
-            }}
-          />
 
-          <Typography
-            variant="body2"
-            color="text.secondary"
+          {/* ================================== */}
+          {/* CANCEL */}
+          {/* ================================== */}
+
+          <Button
+            variant="outlined"
+            fullWidth
+            sx={{
+              fontWeight: 600,
+              py: 1.2,
+            }}
+            onClick={handleCancelClick}
           >
-            Sudah dijawab
-          </Typography>
+            Batal
+          </Button>
+
+          {/* ================================== */}
+          {/* SUBMIT */}
+          {/* ================================== */}
+
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{
+              fontWeight: 600,
+              py: 1.2,
+              background: 'linear-gradient(to bottom, #448AFF, #0D47A1)',
+              color: '#fff',
+              boxShadow: '0 4px 10px rgba(13, 71, 161, 0.3)',
+              '&:hover': {
+                background: 'linear-gradient(to bottom, #2979FF, #0D47A1)',
+              },
+            }}
+            onClick={handleSubmitClick}
+          >
+            Submit
+          </Button>
+
         </Box>
 
-        {/* ================================== */}
-        {/* CURRENT */}
-        {/* ================================== */}
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              bgcolor:
-                'primary.main',
-            }}
-          />
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-          >
-            Soal aktif
-          </Typography>
-        </Box>
-
-        {/* ================================== */}
-        {/* UNANSWERED */}
-        {/* ================================== */}
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              border: '1px solid',
-              borderColor:
-                'text.disabled',
-            }}
-          />
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-          >
-            Belum dijawab
-          </Typography>
-        </Box>
-
-        {/* ================================== */}
-        {/* REVIEW */}
-        {/* ================================== */}
-
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
-          }}
-        >
-          <Box
-            sx={{
-              flexShrink: 0,
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              bgcolor:
-                'warning.main',
-            }}
-          />
-
-          <Typography
-            variant="body2"
-            color="text.secondary"
-          >
-            Ragu-ragu
-          </Typography>
-        </Box>
-
-      </Box>
-
-      {/* ================================== */}
-      {/* INFORMATION */}
-      {/* ================================== */}
-
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{
-          mt: 2,
-        }}
-      >
-        Soal{' '}
-        {currentQuestionIndex + 1}{' '}
-        dari {questions.length}
-      </Typography>
-
-
-
-
-
-{/* ================================== */}
-{/* SELESAI BUTTON */}
-{/* ================================== */}
-
-<Box
-  sx={{
-    mt: 3,
-    display: 'flex',
-    justifyContent: 'center',
-  }}
->
-  <Button
-    variant="contained"
-    size="large"
-    sx={{
-      px: 8, // lebih lebar
-      py: 2, // lebih tinggi
-      fontWeight: 600,
-      borderRadius: 1, // radius 5 sesuai permintaan
-      textTransform: 'uppercase',
-      background: 'linear-gradient(to bottom, #448AFF, #0D47A1)', // gradient biru elegan
-      color: '#fff',
-      boxShadow: '0 4px 10px rgba(13, 71, 161, 0.3)',
-      '&:hover': {
-        background: 'linear-gradient(to bottom, #2979FF, #0D47A1)', // hover lebih gelap
-      },
-    }}
-    onClick={() => {
-      // TODO: tambahkan logika submit ujian di sini
-      console.log('Ujian selesai dikirim!');
-    }}
-  >
-    SELESAI
-  </Button>
-</Box>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+      )}
 
     </Box>
   );
